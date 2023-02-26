@@ -1,6 +1,7 @@
 using Task1_WorkService;
 
 IHost host = Host.CreateDefaultBuilder(args)
+    .UseWindowsService()
     .ConfigureServices(services => {
         services.AddHostedService<Worker>();
     })
