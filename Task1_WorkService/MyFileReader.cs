@@ -11,41 +11,33 @@ namespace Task1_WorkService {
         private const int DefaultBufferSize = 8192; // or 4096
         public static async Task<List<UserTransaction>> ReadAllLinesAsync(FileInfo file) {
             var transactions = new List<UserTransaction>();
-            try {
-                if (!IsFileLocked(file)) {
-                    using (var stream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, DefaultBufferSize)) {
-                        using (var reader = new StreamReader(stream, Encoding.UTF8)) {
-                            string line;
-                            UserTransaction transaction = new UserTransaction();
-                            while ((line = await reader.ReadLineAsync()) != null) {
-                                if(RegexTransactionGenerator.IsNormalTransaction(line)) {
-                                    var groups = RegexTransactionGenerator.SplitTransaction(line);
-                                    if(groups.Length == 9) {
-                                        // Parsing data
-                                        transaction.FirstName = groups[0];
-                                        transaction.LastName = groups[1];
-                                        transaction.Address = groups[2].Trim('“', '”', '"', '`');
-                                        transaction.Service = groups[8];
+            if (!IsFileLocked(file)) {
+                using (var stream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, DefaultBufferSize)) {
+                    using (var reader = new StreamReader(stream, Encoding.UTF8)) {
+                        string? line;
+                        UserTransaction transaction = new UserTransaction();
+                        while ((line = await reader.ReadLineAsync()) != null) {
+                            if(RegexTransactionGenerator.IsNormalTransaction(line)) {
+                                var groups = RegexTransactionGenerator.SplitTransaction(line);
+                                if(groups.Length == 9) {
+                                    transaction = new UserTransaction();
+                                    // Parsing data
+                                    transaction.FirstName = groups[0];
+                                    transaction.LastName = groups[1];
+                                    transaction.Address = groups[2].Trim('“', '”', '"', '`');
+                                    transaction.Service = groups[8];
 
-                                        if (Decimal.TryParse(groups[5], out decimal payment)) {
-                                            transaction.Payment = payment;
-                                        }
-                                        if (DateOnly.TryParse(groups[6], out DateOnly date)) {
-                                            transaction.Date = date;
-                                        }
-                                        if (long.TryParse(groups[7], out long accountNumber)) {
-                                            transaction.AccountNumber = accountNumber;
-                                        }
-                                        transactions.Add(transaction);
+                                    if(Decimal.TryParse(groups[5].Replace('.', ','), out decimal payment)) {
+                                        transaction.Payment = payment;
                                     }
+                                    transaction.Date = groups[6];
+                                    transaction.AccountNumber = groups[7];
+                                    transactions.Add(transaction);
                                 }
                             }
                         }
                     }
                 }
-            }
-            catch(Exception ex) {
-                Console.WriteLine(ex.Message);
             }
             return transactions;
         }

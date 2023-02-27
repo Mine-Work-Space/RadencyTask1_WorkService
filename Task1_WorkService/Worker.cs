@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Text.RegularExpressions;
 using Task1_WorkService.Models;
 using System.IO;
+using System.ComponentModel;
 
 namespace Task1_WorkService {
     public class Worker : BackgroundService {
@@ -25,13 +26,31 @@ namespace Task1_WorkService {
                             Stopwatch stopWatch = new Stopwatch();
                             stopWatch.Start();
                             var transactionsList = MyFileReader.ReadAllLinesAsync(newFile);
+                            var payers = transactionsList.Result.GroupBy(
+                                p => p.Address,
+                                (city, transactionsByAddress) => new ResultModel {
+                                    City = city,
+                                    Services = transactionsByAddress.GroupBy(u => u.Service,
+                                        (serviceName, transactionsByServiceAndAddress) =>  new Service() {
+                                        ServiceName = serviceName,
+                                        Payers = transactionsByServiceAndAddress.Where(s => s.Service == serviceName && s.Address == city)
+                                            .Select(y => new Payer() { 
+                                                AccountNumber = y.AccountNumber,
+                                                Date = y.Date,
+                                                PayerName = y.FirstName + " " + y.LastName,
+                                                Payment = y.Payment
+                                            }).ToList(),
+                                        Total = transactionsByServiceAndAddress.Sum(t => t.Payment)
+                                    }).ToList(),
+                                    Total = transactionsByAddress.Sum(t => t.Payment)
+                                });
 
                             Console.WriteLine($"\n===============================\nTransaction list {transactionsList.Result.Count}\n\tFilePath: {newFile.FullName}");
-                            if(transactionsList.IsCompletedSuccessfully && transactionsList.Result.Count > 0) {
-                                List<ResultModel> result = new List<ResultModel>();
-                                ResultModel resultModel = new ResultModel();
-                                // To DO
-                            }
+                            //if(transactionsList.IsCompletedSuccessfully && transactionsList.Result.Count > 0) {
+                            //    List<ResultModel> result = new List<ResultModel>();
+                            //    ResultModel resultModel = new ResultModel();
+                            //    // To DO
+                            //}
                             stopWatch.Stop();
                             Console.WriteLine("StopWatch: " + stopWatch.ElapsedMilliseconds.ToString() + "\n====================");
                         }));
@@ -54,6 +73,9 @@ namespace Task1_WorkService {
                 return new List<FileInfo>();
             }
             return new List<FileInfo>();
+        }
+        private bool SaveConfig() {
+            return true;
         }
     }
 }

@@ -26,8 +26,11 @@ namespace Task1_WorkService.Models {
         [JsonPropertyName("payment")]
         public decimal Payment { get; set; } = decimal.Zero;
         [JsonPropertyName("date")]
-        public DateTime Date { get; set; } = DateTime.MinValue;
+        public string Date { get; set; } = string.Empty;
         [JsonPropertyName("account_number")]
-        public long AccountNumber { get; set; }
+        public string AccountNumber { get; set; } = string.Empty;
+        public override string ToString() {
+            return $"{{ {PayerName}, {Payment}, {Date}, {AccountNumber} }}";
+        }
     }
 }
