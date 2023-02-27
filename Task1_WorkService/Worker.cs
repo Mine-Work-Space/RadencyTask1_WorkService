@@ -39,7 +39,7 @@ namespace Task1_WorkService {
             try {
                 while (!stoppingToken.IsCancellationRequested) {
                     if(DateTime.Now.Date != _startTime.Date) {
-                        string path = _pathFolderB + DateTime.Now.ToShortDateString().Replace('.', '-') + "\\" + "meta.log";
+                        string path = _pathFolderB + DateTime.Now.AddDays(-1).ToShortDateString().Replace('.', '-') + "\\" + "meta.log";
                         // Update Meta Log file
                         File.Create(path);
                         StringBuilder builder = new StringBuilder();
