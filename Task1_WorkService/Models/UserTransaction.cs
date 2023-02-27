@@ -13,8 +13,5 @@ namespace Task1_WorkService.Models {
         public string Date { get; set; } = string.Empty;
         public string AccountNumber { get; set; } = string.Empty;
         public string Service { get; set; } = string.Empty;
-        public override string ToString() {
-            return $"{{ {FirstName}, {LastName}, '{Address}', {Payment}, {Date}, {AccountNumber}, {Service}}}";
-        }
     }
 }

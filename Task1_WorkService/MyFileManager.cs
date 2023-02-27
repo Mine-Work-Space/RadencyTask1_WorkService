@@ -2,15 +2,21 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Task1_WorkService.Models;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Task1_WorkService {
-    internal static class MyFileReader {
+    internal static class MyFileManager {
         private const int DefaultBufferSize = 8192; // or 4096
+        public static List<string> InvalidFilePath = new List<string>();
+        public static long ParsedLines = 0;
+        public static long ErrorsCount = 0;
         public static async Task<List<UserTransaction>> ReadAllLinesAsync(FileInfo file) {
             var transactions = new List<UserTransaction>();
+            bool isInvalid = false;
             if (!IsFileLocked(file)) {
                 using (var stream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, DefaultBufferSize)) {
                     using (var reader = new StreamReader(stream, Encoding.UTF8)) {
@@ -33,11 +39,25 @@ namespace Task1_WorkService {
                                     transaction.Date = groups[6];
                                     transaction.AccountNumber = groups[7];
                                     transactions.Add(transaction);
+                                    ParsedLines++;
                                 }
+                                else {
+                                    // Errors for meta.log
+                                    ErrorsCount++;
+                                    isInvalid = true;
+                                }
+                            }
+                            else {
+                                ErrorsCount++;
+                                isInvalid = true;
                             }
                         }
                     }
                 }
+            }
+            if(isInvalid) {
+                // Add invalid file path
+                InvalidFilePath.Add(file.FullName);
             }
             return transactions;
         }
@@ -48,9 +68,7 @@ namespace Task1_WorkService {
                 }
             }
             catch (IOException) {
-                //the file is unavailable because it is:
-                //still being written to
-                //or being processed by another thread
+                //the file is unavailable because it is: still being written to or being processed by another thread
                 //or does not exist (has already been processed)
                 return true;
             }
