@@ -53,6 +53,13 @@ namespace Task1_WorkService {
                         builder.AppendLine("]");
                         UpdateMetaLogFile(path,
                             builder.ToString());
+                        //
+                        string pathNewDay = _pathFolderB + DateTime.Now.ToShortDateString().Replace('.', '-') + "\\";
+                        DirectoryInfo directoryInfo = new DirectoryInfo(path);
+                        // Create directory Datetime with meta.log if doesn't exist
+                        if (!directoryInfo.Exists) {
+                            directoryInfo.Create();
+                        }
                         Console.WriteLine("Meta log processed.");
                     }
                     // Start program
